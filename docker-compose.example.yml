@@ -3,7 +3,7 @@ name: 'house research'
 services:
   worker:
     container_name: 'worker'
-    image: ghcr.io/zxcnoname666/house-research:latest
+    image: ghcr.io/loli669/house-research:latest
     restart: always
     volumes:
       - ./kv:/app/kv
@@ -15,7 +15,7 @@ services:
 
   parser:
     container_name: 'avito-parser'
-    image: ghcr.io/zxcnoname666/house-research/avito-parser:latest
+    image: ghcr.io/loli669/house-research/avito-parser:latest
     restart: always
     volumes:
       - ./avito-export:/app/export
