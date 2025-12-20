@@ -1,10 +1,10 @@
 # 🏠 House Research — AI‑powered real‑estate monitor
 
-[![GitHub stars](https://img.shields.io/github/stars/loli669/House-Research?style=social)](https://github.com/loli669/House-Research/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/loli669/House-Research?style=social)](https://github.com/loli669/House-Research/network/members)
-[![GitHub issues](https://img.shields.io/github/issues/loli669/House-Research)](https://github.com/loli669/House-Research/issues)
-[![GitHub last commit](https://img.shields.io/github/last-commit/loli669/House-Research)](https://github.com/loli669/House-Research/commits)
-[![License: MIT](https://img.shields.io/github/license/loli669/House-Research)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/zxcloli666/House-Research?style=social)](https://github.com/zxcloli666/House-Research/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/zxcloli666/House-Research?style=social)](https://github.com/zxcloli666/House-Research/network/members)
+[![GitHub issues](https://img.shields.io/github/issues/zxcloli666/House-Research)](https://github.com/zxcloli666/House-Research/issues)
+[![GitHub last commit](https://img.shields.io/github/last-commit/zxcloli666/House-Research)](https://github.com/zxcloli666/House-Research/commits)
+[![License: MIT](https://img.shields.io/github/license/zxcloli666/House-Research)](LICENSE)
 
 > **House Research** — комплексная система, которая автоматически 📡 собирает объявления о недвижимости, анализирует их с помощью 🧠 ИИ и публикует красочные сводки в Telegram. Экономьте часы ручного мониторинга и получайте только действительно интересные предложения!
 
@@ -14,7 +14,7 @@
 
 | 🚀 Возможность                | Описание                                                                                                                  |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 🔄 **Мульти‑источники**       | Avito (HTML‑парсер `avito-parser` 🔗 [ветка](https://github.com/loli669/House-Research/tree/avito-parser)) + Циан (неофициальный API). |
+| 🔄 **Мульти‑источники**       | Avito (HTML‑парсер `avito-parser` 🔗 [ветка](https://github.com/zxcloli666/House-Research/tree/avito-parser)) + Циан (неофициальный API). |
 | 🤖 **ИИ‑оценка**              | Генерация рейтинга «выгодно / переплата» с учётом цены, инфраструктуры и фото.                                            |
 | 🛫 **Быстрый запуск**         | Docker‑композ для продакшена и Deno‑tasks для разработки.                                                                 |
 | 🚏 **Транспорт + провайдеры** | Поиск ближайших остановок и доступных интернет‑операторов.                                                                |
@@ -43,7 +43,7 @@ graph LR
 
 ### Avito Parser
 
-* Отдельная ветка [`avito-parser`](https://github.com/loli669/House-Research/tree/avito-parser) содержит самодостаточный скрипт на Deno.
+* Отдельная ветка [`avito-parser`](https://github.com/zxcloli666/House-Research/tree/avito-parser) содержит самодостаточный скрипт на Deno.
 * Раз в час 🕐 (через `Deno.cron`) он обходит результаты поиска Avito и сохраняет каждый лот в `export/*.html`.
 * HTML затем читается основным движком для извлечения характеристик и тенденций рынка.
 
@@ -73,7 +73,7 @@ GEMINI_API_KEY=gk1,gk2
 version: "3.9"
 services:
   house-research:
-    image: ghcr.io/loli669/house-research:latest
+    image: ghcr.io/zxcloli666/house-research:latest
     container_name: house-research
     restart: always
     volumes:
@@ -84,7 +84,7 @@ services:
       - .env
 
   avito-parser:
-    image: ghcr.io/loli669/avito-parser:latest
+    image: ghcr.io/zxcloli666/avito-parser:latest
     container_name: avito-parser
     restart: always
     volumes:
@@ -105,7 +105,7 @@ $ docker compose up -d
 
 ```bash
 # Клонируем репозиторий
-$ git clone https://github.com/loli669/House-Research.git
+$ git clone https://github.com/zxcloli666/House-Research.git
 $ cd House-Research
 
 # Установка зависимостей (JSR + Deno)
@@ -155,6 +155,6 @@ $ deno run -A src/main.ts
 ---
 
 <p align="center">
-  <img src="https://api.star-history.com/svg?repos=loli669/House-Research&type=Date"/>
+  <img src="https://api.star-history.com/svg?repos=zxcloli666/House-Research&type=Date"/>
 </p>
 <p align="center"><img src="https://count.getloli.com/get/@House-Research"></p>
