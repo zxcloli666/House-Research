@@ -52,7 +52,7 @@ flowchart TD
 version: "3.9"
 services:
   avito-parser:
-    image: ghcr.io/loli669/house-research/avito-parser:latest
+    image: ghcr.io/zxcloli666/house-research/avito-parser:latest
     container_name: avito-parser
     restart: unless-stopped
     volumes:
@@ -71,7 +71,7 @@ $ docker compose up -d
 
 ```bash
 # Клонировать ветку
-$ git clone -b avito-parser https://github.com/loli669/House-Research.git
+$ git clone -b avito-parser https://github.com/zxcloli666/House-Research.git
 $ cd House-Research
 
 # Установить зависимости (Deno + JSR)
