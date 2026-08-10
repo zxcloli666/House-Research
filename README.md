@@ -155,6 +155,6 @@ $ deno run -A src/main.ts
 ---
 
 <p align="center">
-  <img src="https://api.star-history.com/svg?repos=zxcloli666/House-Research&type=Date"/>
+  <img src="https://api.star-history.com/chart?repos=zxcloli666%2FHouse-Research&type=date&theme=dark&legend=top-left&sealed_token=L7HmrysXvAF2F-KHbNCQwWtEHc7isP3JLFIpAHGUgDTsVf3elOFK00lq1TfqgSg6swsgysRz7Bb-Z9_nhfdRqhiCwVTI9j70Ntv-qjE9T4I6boQqdCL8Jw"/>
 </p>
 <p align="center"><img src="https://count.getloli.com/get/@House-Research"></p>
