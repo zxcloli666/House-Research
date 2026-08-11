@@ -7,42 +7,47 @@ import {
 } from "genai";
 import readPdf from "./prompts/read-pdf.ts";
 import { spyFetch } from "#utils/spyFetch.ts";
+import { createRateLimiter } from "#utils/rateLimit.ts";
 import OpenAI from "openai";
-import { GEMINI_API_KEY, GEMINI_CHAT_ENDPOINT, GEMINI_ENDPOINT } from "#env";
+import {
+  GEMINI_API_KEY,
+  GEMINI_CHAT_ENDPOINT,
+  GEMINI_ENDPOINT,
+  GEMINI_MODEL,
+  GEMINI_MODEL_LITE,
+  GEMINI_RPM,
+} from "#env";
 import { log } from "#logger";
 
-const openAiInstances = new Set<OpenAI>();
-const genAiInstances = new Set<GoogleGenAI>();
+interface GeminiProvider {
+  openai: OpenAI;
+  genAi: GoogleGenAI;
+  /** Гоняет запросы к этому конкретному ключу не чаще GEMINI_RPM раз в минуту. */
+  limit: <T>(fn: () => Promise<T>) => Promise<T>;
+}
 
-for (const key of GEMINI_API_KEY) {
-  const openai = createOpenAi({
+const providers: GeminiProvider[] = GEMINI_API_KEY.map((key) => ({
+  openai: createOpenAi({
     apiKey: key,
     endpoint: `${GEMINI_CHAT_ENDPOINT}/v1beta/openai`,
-  });
-  const genAi = new GoogleGenAI({
+  }),
+  genAi: new GoogleGenAI({
     apiKey: key,
     httpOptions: {
       baseUrl: GEMINI_ENDPOINT,
     },
-  });
+  }),
+  limit: createRateLimiter(GEMINI_RPM),
+}));
 
-  openAiInstances.add(openai);
-  genAiInstances.add(genAi);
-}
-
-log.info("GEMINI API instances:", openAiInstances.size);
+log.info("GEMINI API instances:", providers.length);
 
 export async function chat(
   systemPrompt: string,
   userPrompt: string,
   temperature: number = 0.7,
 ) {
-  return await localChat(
-    systemPrompt,
-    userPrompt,
-    temperature,
-    "gemini-2.5-flash",
-  );
+  return await localChat(systemPrompt, userPrompt, temperature, GEMINI_MODEL);
 }
 
 export async function chatLite(
@@ -54,7 +59,7 @@ export async function chatLite(
     systemPrompt,
     userPrompt,
     temperature,
-    "gemini-2.0-flash",
+    GEMINI_MODEL_LITE,
   );
 }
 
@@ -62,23 +67,24 @@ async function localChat(
   systemPrompt: string,
   userPrompt: string,
   temperature: number = 0.7,
-  model: string = "gemini-3.6-flash",
+  model: string = GEMINI_MODEL_LITE,
 ) {
   let lastError: unknown;
-  for (const openai of openAiInstances) {
+  for (const { openai, limit } of providers) {
     try {
-      return await chatWithOpenAI(openai, {
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        model,
-        temperature,
-      });
+      return await limit(() =>
+        chatWithOpenAI(openai, {
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          model,
+          temperature,
+        })
+      );
     } catch (e) {
       lastError = e;
       log.warn("[gemini] chat instance failed:", e);
-      await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
 
@@ -87,16 +93,19 @@ async function localChat(
 
 export async function uploadFilesAndCustomRun<O>(
   url: string[] = [],
-  fn: (parts: Part[], genAI: GoogleGenAI) => Promise<O>,
+  fn: (
+    parts: Part[],
+    genAI: GoogleGenAI,
+    limit: <T>(f: () => Promise<T>) => Promise<T>,
+  ) => Promise<O>,
 ): Promise<O> {
   let lastError: unknown;
-  for (const genAi of genAiInstances) {
+  for (const { genAi, limit } of providers) {
     try {
-      return await uploadFilesAndCustomRunWithModel(url, genAi, fn);
+      return await uploadFilesAndCustomRunWithModel(url, genAi, limit, fn);
     } catch (e) {
       lastError = e;
       log.warn("[gemini] genai instance failed:", e);
-      await new Promise((resolve) => setTimeout(resolve, 1_000));
     }
   }
 
@@ -105,7 +114,12 @@ export async function uploadFilesAndCustomRun<O>(
 export async function uploadFilesAndCustomRunWithModel<O>(
   url: string[] = [],
   genAi: GoogleGenAI,
-  fn: (parts: Part[], genAI: GoogleGenAI) => Promise<O>,
+  limit: <T>(f: () => Promise<T>) => Promise<T>,
+  fn: (
+    parts: Part[],
+    genAI: GoogleGenAI,
+    limit: <T>(f: () => Promise<T>) => Promise<T>,
+  ) => Promise<O>,
 ): Promise<O> {
   const files = await Promise.all(url.map(async (url) => {
     const res = await spyFetch(url);
@@ -126,7 +140,7 @@ export async function uploadFilesAndCustomRunWithModel<O>(
   );
 
   try {
-    return await fn(parts, genAi);
+    return await fn(parts, genAi, limit);
   } finally {
     for (const file of files) {
       await genAi.files.delete({ name: file.name ?? "" });
@@ -146,17 +160,17 @@ export async function pasteFileAndProWebAsk(
       userPrompt,
       file,
       temperature,
-      "gemini-3.6-flash",
+      GEMINI_MODEL,
     );
   } catch (e) {
-    log.trace(e);
+    log.warn("[gemini] pasteFileAndProWebAsk failed, retrying:", e);
     await new Promise((resolve) => setTimeout(resolve, 5_000));
     return await localPasteFileAndWebAsk(
       systemPrompt,
       userPrompt,
       file,
       temperature,
-      "gemini-3.6-flash",
+      GEMINI_MODEL,
     );
   }
 }
@@ -173,17 +187,17 @@ export async function pasteFileAndFlashWebAsk(
       userPrompt,
       file,
       temperature,
-      "gemini-3.1-pro-preview",
+      GEMINI_MODEL_LITE,
     );
   } catch (e) {
-    log.trace(e);
+    log.warn("[gemini] pasteFileAndFlashWebAsk failed, retrying:", e);
     await new Promise((resolve) => setTimeout(resolve, 5_000));
     return await localPasteFileAndWebAsk(
       systemPrompt,
       userPrompt,
       file,
       temperature,
-      "gemini-3.1-pro-preview",
+      GEMINI_MODEL_LITE,
     );
   }
 }
@@ -200,17 +214,17 @@ export async function pasteFileAndLiteFlashWebAsk(
       userPrompt,
       file,
       temperature,
-      "gemini-3.5-flash-lite",
+      GEMINI_MODEL_LITE,
     );
   } catch (e) {
-    log.trace(e);
+    log.warn("[gemini] pasteFileAndLiteFlashWebAsk failed, retrying:", e);
     await new Promise((resolve) => setTimeout(resolve, 5_000));
     return await localPasteFileAndWebAsk(
       systemPrompt,
       userPrompt,
       file,
       temperature,
-      "gemini-3.5-flash-lite",
+      GEMINI_MODEL_LITE,
     );
   }
 }
@@ -220,32 +234,33 @@ async function localPasteFileAndWebAsk(
   userPrompt: string,
   { mimeType, base64 }: { mimeType: string; base64: string },
   temperature: number = 0.7,
-  model: string = "gemini-3.6-flash",
+  model: string = GEMINI_MODEL_LITE,
 ) {
   let lastError: unknown;
-  for (const genAi of genAiInstances) {
+  for (const { genAi, limit } of providers) {
     try {
-      const result = await genAi.models.generateContent({
-        model: model,
-        config: {
-          tools: [{ googleSearch: {} }],
-          systemInstruction: systemPrompt,
-          temperature,
-          thinkingConfig: {
-            thinkingBudget: -1,
+      const result = await limit(() =>
+        genAi.models.generateContent({
+          model: model,
+          config: {
+            tools: [{ googleSearch: {} }],
+            systemInstruction: systemPrompt,
+            temperature,
+            thinkingConfig: {
+              thinkingBudget: -1,
+            },
           },
-        },
-        contents: [
-          { inlineData: { mimeType, data: base64 } },
-          { text: userPrompt },
-        ],
-      });
+          contents: [
+            { inlineData: { mimeType, data: base64 } },
+            { text: userPrompt },
+          ],
+        })
+      );
 
       return result.text;
     } catch (e) {
       lastError = e;
       log.warn("[gemini] genai instance failed:", e);
-      await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
 
@@ -258,21 +273,23 @@ export async function uploadFilesAndChat(
   url: string[] = [],
   temperature: number = 0.7,
 ) {
-  return await uploadFilesAndCustomRun(url, async (parts, genAi) => {
-    const result = await genAi.models.generateContent({
-      model: "gemini-3.1-pro-preview",
-      config: {
-        systemInstruction: systemPrompt,
-        temperature,
-        thinkingConfig: {
-          thinkingBudget: -1,
+  return await uploadFilesAndCustomRun(url, async (parts, genAi, limit) => {
+    const result = await limit(() =>
+      genAi.models.generateContent({
+        model: GEMINI_MODEL,
+        config: {
+          systemInstruction: systemPrompt,
+          temperature,
+          thinkingConfig: {
+            thinkingBudget: -1,
+          },
         },
-      },
-      contents: createUserContent([
-        ...parts,
-        userPrompt,
-      ]),
-    });
+        contents: createUserContent([
+          ...parts,
+          userPrompt,
+        ]),
+      })
+    );
 
     return result.text;
   });
