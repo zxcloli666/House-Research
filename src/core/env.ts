@@ -20,9 +20,12 @@ function requireEnvList(name: string): string[] {
   return requireEnv(name).split(",").map((v) => v.trim()).filter(Boolean);
 }
 
-export const CHUTES_API_KEY = requireEnv("CHUTES_API_KEY");
-export const OPENROUTER_API_KEY = requireEnvList("OPENROUTER_API_KEY");
-export const NVIDIA_API_KEY = requireEnvList("NVIDIA_API_KEY");
+// Универсальный OpenAI-совместимый провайдер (OpenRouter/Together/Groq/
+// свой vLLM/Ollama и т.д.) — один endpoint, один или несколько токенов
+// и одна или несколько моделей на выбор.
+export const AI_ENDPOINT = requireEnv("AI_ENDPOINT");
+export const AI_API_KEY = requireEnvList("AI_API_KEY");
+export const AI_MODELS = requireEnvList("AI_MODELS");
 
 export const GEMINI_API_KEY = requireEnvList("GEMINI_API_KEY");
 export const GEMINI_ENDPOINT = requireEnv("GEMINI_ENDPOINT");

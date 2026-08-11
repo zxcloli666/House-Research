@@ -52,14 +52,20 @@ graph LR
 * Для доступа к полноценному поиску Циан требуется **профиль агента**. Залогиньтесь, перейдите в поиск и скопируйте все cookie запросов к циану — поместите значение в `CIAN_SEARCH_COOKIE`.
 * Парсер берёт фильтр из `.yaml`‑конфигов, добавляет cookie и получает JSON со всеми объявлениями.
 
-### Поддержка нескольких API‑ключей
-
-Укажите ключи OpenRouter, Gemini, Nvidia, etc.. через запятую:
+### AI-провайдеры и поддержка нескольких API‑ключей
 
 ```env
-OPENROUTER_API_KEY=key_one,key_two,key_three
+AI_ENDPOINT=https://openrouter.ai/api/v1
+AI_API_KEY=key_one,key_two,key_three
+AI_MODELS=deepseek/deepseek-r1:free,deepseek/deepseek-r1-0528:free
 GEMINI_API_KEY=gk1,gk2
 ```
+
+Текстовый чат ходит в любой OpenAI-совместимый endpoint (OpenRouter,
+Together, Groq, DeepInfra, свой vLLM/Ollama и т.д.) через три переменные:
+`AI_ENDPOINT`, `AI_API_KEY`, `AI_MODELS`. Gemini настроен отдельно —
+помимо чата он нужен для мультимодальных задач (PDF/фото объявления,
+Google Search grounding), которые обычный OpenAI-эндпоинт не умеет.
 
 При достижении дневного лимита ⚡️ библиотека автоматически переключится на следующий токен.
 
@@ -125,7 +131,7 @@ cp conf.example.yml conf/conf.yml   # поправьте под себя (адр
 
 ---
 
-> **Подсказка:** создайте `.env` на основе `.env.example` и заполните токены Telegram, OpenRouter/Gemini, RapidAPI и cookie Циан‑агента.
+> **Подсказка:** создайте `.env` на основе `.env.example` и заполните токены Telegram, AI_ENDPOINT/AI_API_KEY/AI_MODELS, Gemini, RapidAPI и cookie Циан‑агента.
 
 ---
 
@@ -160,8 +166,10 @@ $ deno run -A src/main.ts
 | `TELEGRAM_CHAT_ID`   | ✅           | ID чата/канала для публикации.              |
 | `AVITO_URL`          | ✅           | URL поиска Avito (с параметрами фильтра).   |
 | `CIAN_SEARCH_COOKIE` | ✅           | Cookie авторизованного профиля агента Циан. |
-| `OPENROUTER_API_KEY` | ❌           | Один или несколько ключей через запятую.    |
-| `GEMINI_API_KEY`     | ❌           | Аналогично, поддержка нескольких ключей.    |
+| `AI_ENDPOINT`        | ✅           | Любой OpenAI-совместимый endpoint (OpenRouter/Together/Groq/свой). |
+| `AI_API_KEY`         | ✅           | Один или несколько токенов через запятую.   |
+| `AI_MODELS`          | ✅           | Одна или несколько моделей через запятую.   |
+| `GEMINI_API_KEY`     | ✅           | Отдельно для мультимодалки, поддержка нескольких ключей. |
 
 > Полный список — в `.env.example`.
 

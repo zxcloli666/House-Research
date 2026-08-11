@@ -64,6 +64,7 @@ async function localChat(
   temperature: number = 0.7,
   model: string = "gemini-3.6-flash",
 ) {
+  let lastError: unknown;
   for (const openai of openAiInstances) {
     try {
       return await chatWithOpenAI(openai, {
@@ -75,28 +76,31 @@ async function localChat(
         temperature,
       });
     } catch (e) {
-      log.trace(e);
+      lastError = e;
+      log.warn("[gemini] chat instance failed:", e);
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
 
-  throw new Error("No openai instances");
+  throw new Error("No openai instances", { cause: lastError });
 }
 
 export async function uploadFilesAndCustomRun<O>(
   url: string[] = [],
   fn: (parts: Part[], genAI: GoogleGenAI) => Promise<O>,
 ): Promise<O> {
+  let lastError: unknown;
   for (const genAi of genAiInstances) {
     try {
       return await uploadFilesAndCustomRunWithModel(url, genAi, fn);
     } catch (e) {
-      log.trace(e);
+      lastError = e;
+      log.warn("[gemini] genai instance failed:", e);
       await new Promise((resolve) => setTimeout(resolve, 1_000));
     }
   }
 
-  throw new Error("No genai instances");
+  throw new Error("No genai instances", { cause: lastError });
 }
 export async function uploadFilesAndCustomRunWithModel<O>(
   url: string[] = [],
@@ -218,6 +222,7 @@ async function localPasteFileAndWebAsk(
   temperature: number = 0.7,
   model: string = "gemini-3.6-flash",
 ) {
+  let lastError: unknown;
   for (const genAi of genAiInstances) {
     try {
       const result = await genAi.models.generateContent({
@@ -238,12 +243,13 @@ async function localPasteFileAndWebAsk(
 
       return result.text;
     } catch (e) {
-      log.trace(e);
+      lastError = e;
+      log.warn("[gemini] genai instance failed:", e);
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
 
-  throw new Error("No genai instances");
+  throw new Error("No genai instances", { cause: lastError });
 }
 
 export async function uploadFilesAndChat(
