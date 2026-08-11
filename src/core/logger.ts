@@ -84,20 +84,30 @@ function withCtx<T>(patch: Ctx, fn: () => T | Promise<T>) {
 
 const origCron = (Deno as any).cron;
 if (typeof origCron === "function") {
-  (Deno as any).cron = function (name: string, tab: string, cb: () => unknown) {
-    return origCron.call(
-      Deno,
-      name,
-      tab,
-      () =>
-        withCtx({
-          runId: crypto.randomUUID(),
-          method: "CRON",
-          workflowName: "-",
-          stepId: "-",
-        }, cb),
-    );
-  };
+  // В актуальных версиях Deno `Deno.cron` — accessor-свойство только с
+  // getter'ом (без setter'а), поэтому прямое `Deno.cron = ...` кидает
+  // "Cannot set property cron of #<Object> which has only a getter".
+  // Object.defineProperty переопределяет свойство целиком и работает,
+  // поскольку оно остаётся configurable.
+  Object.defineProperty(Deno, "cron", {
+    value: function (name: string, tab: string, cb: () => unknown) {
+      return origCron.call(
+        Deno,
+        name,
+        tab,
+        () =>
+          withCtx({
+            runId: crypto.randomUUID(),
+            method: "CRON",
+            workflowName: "-",
+            stepId: "-",
+          }, cb),
+      );
+    },
+    writable: true,
+    configurable: true,
+    enumerable: true,
+  });
 }
 
 const origWfRun = Workflow.prototype.run;
