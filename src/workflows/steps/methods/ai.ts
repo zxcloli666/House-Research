@@ -1,6 +1,4 @@
-import { chat as chutesChat } from "#ai-agents/chutes.ts";
-import { chat as nvidiaChat } from "#ai-agents/nvidia.ts";
-import { chat as openChat } from "#ai-agents/openrouter.ts";
+import { chat as aiChat } from "#ai-agents/openai-compatible.ts";
 import {
   chat as geminiChat,
   chatLite as geminiChatLite,
@@ -9,6 +7,7 @@ import { deadline } from "@std/async";
 import { log } from "#logger";
 
 const TIMEOUT = 240_000;
+const RETRIES = 3;
 
 export async function safeFreeAi(
   systemPrompt: string,
@@ -22,43 +21,29 @@ export async function safeFreeAi(
   }
 }
 
+/**
+ * Основной провайдер (AI_ENDPOINT/AI_API_KEY/AI_MODELS) с несколькими
+ * попытками и нарастающей паузой между ними; если он полностью недоступен —
+ * падаем обратно на Gemini.
+ */
 export async function safeFreeThink(
   systemPrompt: string,
   userPrompt: string,
   temperature: number = 0,
 ): Promise<string> {
-  try {
-    return await deadline(
-      openChat(systemPrompt, userPrompt, temperature),
-      TIMEOUT,
-    );
-  } catch (err) {
-    log.trace(err);
-    log.debug("openRouter failed");
-  }
-
-  for (let i = 0; i < 3; i++) {
-    try {
-      return await Promise.any([
-        deadline(chutesChat(systemPrompt, userPrompt, temperature), TIMEOUT),
-        deadline(nvidiaChat(systemPrompt, userPrompt, temperature), TIMEOUT),
-      ]);
-    } catch (err) {
-      log.debug(err);
-    }
-
+  for (let i = 0; i < RETRIES; i++) {
     try {
       return await deadline(
-        openChat(systemPrompt, userPrompt, temperature),
+        aiChat(systemPrompt, userPrompt, temperature),
         TIMEOUT,
       );
     } catch (err) {
-      log.debug(err);
+      log.warn(`[ai] attempt ${i + 1}/${RETRIES} failed:`, err);
     }
 
     await new Promise((resolve) => setTimeout(resolve, i * 3_000));
   }
 
-  log.warn("Free Think failed");
+  log.warn("[ai] primary provider exhausted, falling back to Gemini");
   return await geminiChat(systemPrompt, userPrompt, temperature);
 }
