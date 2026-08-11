@@ -62,7 +62,7 @@ async function localChat(
   systemPrompt: string,
   userPrompt: string,
   temperature: number = 0.7,
-  model: string = "gemini-2.5-pro",
+  model: string = "gemini-3.6-flash",
 ) {
   for (const openai of openAiInstances) {
     try {
@@ -142,7 +142,7 @@ export async function pasteFileAndProWebAsk(
       userPrompt,
       file,
       temperature,
-      "gemini-2.5-pro",
+      "gemini-3.6-flash",
     );
   } catch (e) {
     log.trace(e);
@@ -152,7 +152,7 @@ export async function pasteFileAndProWebAsk(
       userPrompt,
       file,
       temperature,
-      "gemini-2.5-pro",
+      "gemini-3.6-flash",
     );
   }
 }
@@ -169,7 +169,7 @@ export async function pasteFileAndFlashWebAsk(
       userPrompt,
       file,
       temperature,
-      "gemini-2.5-flash",
+      "gemini-3.1-pro-preview",
     );
   } catch (e) {
     log.trace(e);
@@ -179,7 +179,7 @@ export async function pasteFileAndFlashWebAsk(
       userPrompt,
       file,
       temperature,
-      "gemini-2.5-flash",
+      "gemini-3.1-pro-preview",
     );
   }
 }
@@ -196,7 +196,7 @@ export async function pasteFileAndLiteFlashWebAsk(
       userPrompt,
       file,
       temperature,
-      "gemini-2.0-flash",
+      "gemini-3.5-flash-lite",
     );
   } catch (e) {
     log.trace(e);
@@ -206,7 +206,7 @@ export async function pasteFileAndLiteFlashWebAsk(
       userPrompt,
       file,
       temperature,
-      "gemini-2.0-flash",
+      "gemini-3.5-flash-lite",
     );
   }
 }
@@ -216,7 +216,7 @@ async function localPasteFileAndWebAsk(
   userPrompt: string,
   { mimeType, base64 }: { mimeType: string; base64: string },
   temperature: number = 0.7,
-  model: string = "gemini-2.5-pro",
+  model: string = "gemini-3.6-flash",
 ) {
   for (const genAi of genAiInstances) {
     try {
@@ -254,7 +254,7 @@ export async function uploadFilesAndChat(
 ) {
   return await uploadFilesAndCustomRun(url, async (parts, genAi) => {
     const result = await genAi.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-pro-preview",
       config: {
         systemInstruction: systemPrompt,
         temperature,
