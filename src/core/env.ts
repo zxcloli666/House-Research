@@ -32,16 +32,9 @@ export const GEMINI_ENDPOINT = requireEnv("GEMINI_ENDPOINT");
 export const GEMINI_CHAT_ENDPOINT = Deno.env.get("GEMINI_CHAT_ENDPOINT") ??
   GEMINI_ENDPOINT;
 
-// Модели заданы через env, а не зашиты в коде: Google периодически
-// переименовывает/списывает конкретные версии моделей, а бесплатная квота
-// у "тяжёлых" моделей (Pro) на многих аккаунтах равна нулю. "-latest" —
-// официальный алиас Google, который сам всегда указывает на актуальную
-// модель нужного тона, так что даже дефолт не протухнет через год.
-// Проверить свои реальные лимиты можно в Google AI Studio → Rate Limits.
-export const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") ??
-  "gemini-flash-lite-latest";
-export const GEMINI_MODEL_LITE = Deno.env.get("GEMINI_MODEL_LITE") ??
-  "gemini-flash-lite-latest";
+// Список моделей (лучшая → худшая) зашит в src/ai-agents/gemini.ts, не
+// здесь: он используется только этим модулем, конфигурировать через .env
+// незачем — код сам перебирает все модели по очереди.
 
 // Сколько запросов к Gemini на один ключ разрешено в минуту. Бесплатные
 // лимиты обычно 5–16 RPM — дефолт заведомо ниже любого из них с запасом.
