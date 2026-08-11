@@ -19,6 +19,7 @@ export async function chat(
   userPrompt: string,
   temperature: number = 0.7,
 ) {
+  let lastError: unknown;
   for (const openai of openAiInstances) {
     try {
       return await chatWithOpenAI(openai, {
@@ -30,9 +31,10 @@ export async function chat(
         temperature,
       });
     } catch (err) {
-      log.trace(err);
+      lastError = err;
+      log.warn("[nvidia] instance failed:", err);
     }
   }
 
-  throw new Error("No models");
+  throw new Error("No models", { cause: lastError });
 }
