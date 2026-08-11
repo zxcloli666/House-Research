@@ -62,7 +62,7 @@ async function getStopsInRadius(
   lat: string | number,
   lon: string | number,
 ): Promise<string> {
-  const url = "https://wikiroutes-api.p.rapidapi.com/stopsInRadius?" + qs({
+  const url = "https://capi.busmaps.com:8443/stopsInRadius?" + qs({
     lat: lat,
     lon: lon,
     radius: 500,
@@ -76,7 +76,7 @@ async function getRouteToLocation(
   source: { lat: string | number; lon: string | number },
   dest: { lat: string | number; lon: string | number },
 ): Promise<string> {
-  const url = "https://wikiroutes-api.p.rapidapi.com/routes?" + qs({
+  const url = "https://capi.busmaps.com:8443/routes?" + qs({
     origin: `${source.lat},${source.lon}`,
     destination: `${dest.lat},${dest.lon}`,
   });
@@ -88,8 +88,8 @@ async function internalMakeRapidRequest(url: string) {
   const options = {
     method: "GET",
     headers: {
-      "x-rapidapi-key": "unknown",
-      "x-rapidapi-host": "wikiroutes-api.p.rapidapi.com",
+      "capi-key": "unknown",
+      "capi-host": "busmaps.com",
     },
   };
 
