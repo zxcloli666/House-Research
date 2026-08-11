@@ -30,7 +30,7 @@ const DEFAULT_CONFIG: AppConfig = {
     geo: [0, 1, 2],
     regions: [1],
   },
-  avitoDiskPath: "/root/utils/avito-export",
+  avitoDiskPath: "/avito-export",
   logLevel: "info",
 };
 
