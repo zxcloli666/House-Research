@@ -32,6 +32,14 @@ export const GEMINI_ENDPOINT = requireEnv("GEMINI_ENDPOINT");
 export const GEMINI_CHAT_ENDPOINT = Deno.env.get("GEMINI_CHAT_ENDPOINT") ??
   GEMINI_ENDPOINT;
 
+// Список моделей (лучшая → худшая) зашит в src/ai-agents/gemini.ts, не
+// здесь: он используется только этим модулем, конфигурировать через .env
+// незачем — код сам перебирает все модели по очереди.
+
+// Сколько запросов к Gemini на один ключ разрешено в минуту. Бесплатные
+// лимиты обычно 5–16 RPM — дефолт заведомо ниже любого из них с запасом.
+export const GEMINI_RPM = Number(Deno.env.get("GEMINI_RPM") ?? "8");
+
 export const RAPID_API_KEY = requireEnvList("RAPID_API_KEY");
 
 // Cookie Циан-агента опционален: без него просто не будет работать поиск Циан.
